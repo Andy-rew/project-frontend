@@ -1,0 +1,10 @@
+image: node:latest
+
+cache:
+  paths:
+    - node_modules/
+
+lint:
+  script:
+    - yarn install --frozen-lockfile
+    - yarn run lint --no-fix --max-warnings 0
