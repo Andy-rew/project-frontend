@@ -1,7 +1,33 @@
 <template>
   <div>
     <div>
-      <h5>Table sample</h5>
+      <h4>Происшествия</h4>
+      <div class="mb-3 mt-4">
+        <b-form inline>
+          <label class="mr-2">Дата начала:</label>
+          <b-form-input
+            id="inlineStartDate"
+            class="mb-2 mr-sm-2 mb-sm-0"
+            placeholder="Введите дату"
+            type="date"
+            v-model="startDate"
+          ></b-form-input>
+
+          <label class="ml-5 mr-2">Дата окончания:</label>
+          <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+            <b-form-input
+              id="inlineEndDate"
+              placeholder="Введите дату"
+              type="date"
+              v-model="endDate"
+            ></b-form-input>
+          </b-input-group>
+
+          <b-button @click="updateTableWithDate" variant="primary"
+            >Обновить таблицу</b-button
+          >
+        </b-form>
+      </div>
       <div class="tableWrapper">
         <ag-grid-vue
           :columnDefs="columnDefs"
@@ -28,7 +54,7 @@
           </b-col>
         </b-row>
       </div>
-  </div>
+    </div>
   </div>
 </template>
 
@@ -42,7 +68,10 @@ import ActionRenderer from '@/components/table/ActionRenderer.vue'
 import { mobileWidthMapper } from '@/store/modules/mobileWidth'
 import AgGridFactory from '@/factories/agGridFactory'
 import { FormSchema } from 'vue-form-generator'
-import { userMapper } from '@/store/modules/user'
+import UserAPI from '@/api/requests/user'
+import _ from 'lodash'
+import moment from 'moment'
+import { GridApi } from 'ag-grid-community'
 
 const Mapper = Vue.extend({
   computed: {
@@ -52,33 +81,109 @@ const Mapper = Vue.extend({
 
 @Component({ components: { AgGridVue, ActionRenderer } })
 export default class DevelopmentPage extends Mapper {
+  private gridApi?: GridApi
+  private startDate = ''
+  private endDate = ''
+
+  private async updateTableWithDate() {
+    if (this.startDate === '' || this.endDate === '') {
+      this.rowData = (await UserAPI.getAccidents(null)).data?.accidents
+      this.gridApi?.setRowData(this.rowData)
+    } else {
+      this.rowData = (
+        await UserAPI.getAccidentsDate(this.startDate, this.endDate)
+      ).data?.accidents
+      this.gridApi?.setRowData(this.rowData)
+    }
+  }
+
+  private async created() {
+    const accidents = await UserAPI.getAccidents(null)
+    this.rowData = accidents.data?.accidents
+    this.gridApi?.setRowData(this.rowData)
+  }
+
   // ================ Start Table ================
+  // private columnDefs = [
+  //   {
+  //     headerName: 'Фамилия',
+  //     field: 'surname',
+  //     colId: 'surname',
+  //     filterParams: {
+  //       buttons: ['reset'],
+  //       suppressAndOrCondition: true,
+  //     },
+  //   },
+  //   {
+  //     headerName: 'Имя',
+  //     field: 'name',
+  //     colId: 'name',
+  //     filterParams: {
+  //       buttons: ['reset'],
+  //       suppressAndOrCondition: true,
+  //     },
+  //   },
+  //   {
+  //     headerName: 'Отчество',
+  //     field: 'midname',
+  //     colId: 'midname',
+  //     filterParams: {
+  //       buttons: ['reset'],
+  //       suppressAndOrCondition: true,
+  //     },
+  //   },
+  //   {
+  //     ...AgGridFactory.getActionColumn({
+  //       cellRendererParams: {
+  //         onEdit: (e: any) => {
+  //           console.log(e)
+  //         },
+  //         onDelete: (e: any) => {
+  //           console.log(e)
+  //         },
+  //         onInfo: (e: any) => {
+  //           console.log(e)
+  //         },
+  //       },
+  //       width: 140,
+  //       maxWidth: 140,
+  //     }),
+  //   },
+  // ]
+
   private columnDefs = [
     {
-      headerName: 'Фамилия',
-      field: 'surname',
-      colId: 'surname',
+      headerName: 'Информация',
+      field: 'info',
+      colId: 'info',
       filterParams: {
         buttons: ['reset'],
         suppressAndOrCondition: true,
       },
     },
     {
-      headerName: 'Имя',
-      field: 'name',
-      colId: 'name',
+      headerName: 'Решение',
+      field: 'solution',
+      colId: 'solution',
       filterParams: {
         buttons: ['reset'],
         suppressAndOrCondition: true,
       },
     },
     {
-      headerName: 'Отчество',
-      field: 'midname',
-      colId: 'midname',
+      headerName: 'Дата регистрации',
+      field: 'registerDate',
+      colId: 'registerDate',
+      filter: 'agDateColumnFilter',
       filterParams: {
         buttons: ['reset'],
-        suppressAndOrCondition: true,
+      },
+      valueFormatter(params: any) {
+        if (_.isEmpty(params.value)) {
+          return 'Не указано'
+        } else {
+          return moment(params.value).format('DD.MM.YYYY')
+        }
       },
     },
     {
@@ -87,11 +192,9 @@ export default class DevelopmentPage extends Mapper {
           onEdit: (e: any) => {
             console.log(e)
           },
-          onDelete: (e: any) => {
-            console.log(e)
-          },
-          onInfo: (e: any) => {
-            console.log(e)
+          onDelete: async (e: any) => {
+            await UserAPI.deleteAccident(e.data?.accidentId)
+            this.reDrawTable()
           },
         },
         width: 140,
@@ -99,23 +202,54 @@ export default class DevelopmentPage extends Mapper {
       }),
     },
   ]
+
+  private async reDrawTable() {
+    if (this.gridApi) {
+      const response = await UserAPI.getAccidents(null)
+      if (response) {
+        this.rowData = response.data.accidents
+        this.gridApi.setRowData(this.rowData)
+      }
+    }
+  }
+
+  private onGridReady({ api }: { api: any }) {
+    api.setRowData(this.rowData)
+    this.gridApi = api
+  }
+
   private gridOptions = {
     ...AgGridFactory.getDefaultGridOptions(),
+    defaultColDef: {
+      editable: false,
+      sortable: true,
+      filter: true,
+      resizable: true,
+    },
     pagination: true,
     paginationPageSize: 15,
+    onGridReady: this.onGridReady,
+    components: {
+      AgGridFactory,
+    },
+    frameworkComponents: {
+      ActionRenderer,
+    },
   }
-  private rowData = [
-    {
-      surname: 'Иванов',
-      name: 'Владимир',
-      midname: 'Сергеевич',
-    },
-    {
-      surname: 'Ковынев',
-      name: 'Максим',
-      midname: 'Владимирович',
-    },
-  ]
+  // private rowData = [
+  //   {
+  //     surname: 'Иванов',
+  //     name: 'Владимир',
+  //     midname: 'Сергеевич',
+  //   },
+  //   {
+  //     surname: 'Ковынев',
+  //     name: 'Максим',
+  //     midname: 'Владимирович',
+  //   },
+  // ]
+  private rowData = []
+
   // ================ End Table ================
 
   private model = {

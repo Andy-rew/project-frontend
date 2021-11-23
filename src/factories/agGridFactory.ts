@@ -5,12 +5,6 @@ import store from '@/store'
 export default class AgGridFactory {
   public static getDefaultGridOptions() {
     return {
-      defaultColDef: {
-        editable: false,
-        sortable: true,
-        filter: true,
-        resizable: true,
-      },
       localeText: Translation.localeTableText,
       suppressDragLeaveHidesColumns: true,
       onGridSizeChanged: ({ api }: { api: GridApi }) => {
