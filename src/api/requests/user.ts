@@ -21,23 +21,8 @@ export function createURLParams(
 }
 
 export default class UserAPI {
-  public static login(roles: string[]) {
-    if (process.env.NODE_ENV === 'production') {
-      window.location.href = `${baseURL}/auth`
-    } else {
-      // Dev
-      const params = new URLSearchParams()
-
-      if (roles && roles.length) {
-        for (const role of roles) {
-          params.append('roles', role)
-        }
-      } else {
-        params.append('roles', '[]')
-      }
-
-      window.location.href = `${baseURL}/auth/dev?${params.toString()}`
-    }
+  public static getAccidentOfPerson(id: number): AxiosPromise {
+    return http.get(`${baseURL}/accidents/personal/${id}`)
   }
 
   public static getAccidents(
@@ -56,5 +41,13 @@ export default class UserAPI {
 
   public static deleteAccident(id: number): AxiosPromise {
     return http.delete(`${baseURL}/accidents/delete/${id}`)
+  }
+
+  public static deletePerson(id: number): AxiosPromise {
+    return http.delete(`${baseURL}/people/delete/${id}`)
+  }
+
+  public static getPeople(): AxiosPromise {
+    return http.get(`${baseURL}/people`)
   }
 }

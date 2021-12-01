@@ -26,6 +26,12 @@
           <b-button @click="updateTableWithDate" variant="primary"
             >Обновить таблицу</b-button
           >
+          <b-button
+            @click="updateTableWithDate"
+            variant="primary"
+            class="ml-auto"
+            >Добавить происшествие</b-button
+          >
         </b-form>
       </div>
       <div class="tableWrapper">
@@ -36,25 +42,34 @@
           class="ag-theme-alpine h-100"
         />
       </div>
-      <hr />
-      <h5>{{ `isMobile: ${isMobile}` }}</h5>
-      <hr />
-      <div>
-        <h5>vue-form-generator</h5>
-        <b-row>
-          <b-col cols="6">
-            <b-card>
-              <vue-form-generator :schema="schema" :model="model" />
-            </b-card>
-          </b-col>
-          <b-col cols="6">
-            <b-card>
-              <pre>{{ JSON.stringify(model, null, 4) }}</pre>
-            </b-card>
-          </b-col>
-        </b-row>
+    </div>
+
+    <div class="mt-5">
+      <h4>Список участников</h4>
+      <b-form inline>
+        <b-button @click="openAddEditModal" variant="primary" class="ml-auto"
+          >Добавить участника</b-button
+        >
+      </b-form>
+
+      <div class="tableWrapper mt-3">
+        <ag-grid-vue
+          :columnDefs="columnDefsPeople"
+          :gridOptions="gridOptionsPeople"
+          :rowData="rowDataPeople"
+          class="ag-theme-alpine h-100"
+        />
       </div>
     </div>
+    <ShowNumberModal modal-id="countModal" :text="textOfModal.text">
+    </ShowNumberModal>
+
+    <EditAddModal
+      editUserModalId="addUser"
+      title="Приглашение пользователя"
+      type="add"
+      @reload="reDrawTable"
+    ></EditAddModal>
   </div>
 </template>
 
@@ -72,6 +87,9 @@ import UserAPI from '@/api/requests/user'
 import _ from 'lodash'
 import moment from 'moment'
 import { GridApi } from 'ag-grid-community'
+import ShowNumberModal from '@/components/ShowNumberModal.vue'
+import UserFactory from '@/factories/userFactory'
+import EditAddModal from '@/components/EditAddModal.vue'
 
 const Mapper = Vue.extend({
   computed: {
@@ -79,11 +97,15 @@ const Mapper = Vue.extend({
   },
 })
 
-@Component({ components: { AgGridVue, ActionRenderer } })
+@Component({
+  components: { AgGridVue, ActionRenderer, ShowNumberModal, EditAddModal },
+})
 export default class DevelopmentPage extends Mapper {
   private gridApi?: GridApi
   private startDate = ''
   private endDate = ''
+
+  private textOfModal = UserFactory.emptyText()
 
   private async updateTableWithDate() {
     if (this.startDate === '' || this.endDate === '') {
@@ -101,55 +123,83 @@ export default class DevelopmentPage extends Mapper {
     const accidents = await UserAPI.getAccidents(null)
     this.rowData = accidents.data?.accidents
     this.gridApi?.setRowData(this.rowData)
+    const people = await UserAPI.getPeople()
+    this.rowDataPeople = people.data?.people
+    this.gridApi?.setRowData(this.rowDataPeople)
   }
 
-  // ================ Start Table ================
-  // private columnDefs = [
-  //   {
-  //     headerName: 'Фамилия',
-  //     field: 'surname',
-  //     colId: 'surname',
-  //     filterParams: {
-  //       buttons: ['reset'],
-  //       suppressAndOrCondition: true,
-  //     },
-  //   },
-  //   {
-  //     headerName: 'Имя',
-  //     field: 'name',
-  //     colId: 'name',
-  //     filterParams: {
-  //       buttons: ['reset'],
-  //       suppressAndOrCondition: true,
-  //     },
-  //   },
-  //   {
-  //     headerName: 'Отчество',
-  //     field: 'midname',
-  //     colId: 'midname',
-  //     filterParams: {
-  //       buttons: ['reset'],
-  //       suppressAndOrCondition: true,
-  //     },
-  //   },
-  //   {
-  //     ...AgGridFactory.getActionColumn({
-  //       cellRendererParams: {
-  //         onEdit: (e: any) => {
-  //           console.log(e)
-  //         },
-  //         onDelete: (e: any) => {
-  //           console.log(e)
-  //         },
-  //         onInfo: (e: any) => {
-  //           console.log(e)
-  //         },
-  //       },
-  //       width: 140,
-  //       maxWidth: 140,
-  //     }),
-  //   },
-  // ]
+  private openAddEditModal() {
+    this.$bvModal.show('addUser')
+  }
+
+  private columnDefsPeople = [
+    {
+      headerName: 'Фамилия',
+      field: 'surname',
+      colId: 'surname',
+      filterParams: {
+        buttons: ['reset'],
+        suppressAndOrCondition: true,
+      },
+    },
+    {
+      headerName: 'Имя',
+      field: 'name',
+      colId: 'name',
+      filterParams: {
+        buttons: ['reset'],
+        suppressAndOrCondition: true,
+      },
+    },
+    {
+      headerName: 'Отчество',
+      field: 'midname',
+      colId: 'midname',
+      filterParams: {
+        buttons: ['reset'],
+        suppressAndOrCondition: true,
+      },
+    },
+    {
+      headerName: 'Адрес',
+      field: 'address',
+      colId: 'address',
+      filterParams: {
+        buttons: ['reset'],
+        suppressAndOrCondition: true,
+      },
+    },
+    {
+      headerName: 'Число судимостей',
+      field: 'convictNum',
+      colId: 'convictNum',
+      filterParams: {
+        buttons: ['reset'],
+        suppressAndOrCondition: true,
+      },
+    },
+
+    {
+      ...AgGridFactory.getActionColumn({
+        cellRendererParams: {
+          onEdit: (e: any) => {
+            console.log(e)
+          },
+          onInfo: async (e: any) => {
+            const res = await UserAPI.getAccidentOfPerson(e.data?.id)
+            this.textOfModal.text = _.toString(res.data.count)
+            this.$bvModal.show('countModal')
+          },
+          onDelete: async (e: any) => {
+            await UserAPI.deletePerson(e.data?.id)
+            await this.reDrawTable()
+          },
+        },
+        width: 140,
+        maxWidth: 140,
+      }),
+    },
+  ]
 
   private columnDefs = [
     {
@@ -206,15 +256,25 @@ export default class DevelopmentPage extends Mapper {
   private async reDrawTable() {
     if (this.gridApi) {
       const response = await UserAPI.getAccidents(null)
+      const response1 = await UserAPI.getPeople()
       if (response) {
         this.rowData = response.data.accidents
         this.gridApi.setRowData(this.rowData)
+      }
+      if (response1) {
+        this.rowDataPeople = response1.data.people
+        this.gridApi.setRowData(this.rowDataPeople)
       }
     }
   }
 
   private onGridReady({ api }: { api: any }) {
     api.setRowData(this.rowData)
+    this.gridApi = api
+  }
+
+  private onGridReadyPeople({ api }: { api: any }) {
+    api.setRowData(this.rowDataPeople)
     this.gridApi = api
   }
 
@@ -236,21 +296,27 @@ export default class DevelopmentPage extends Mapper {
       ActionRenderer,
     },
   }
-  // private rowData = [
-  //   {
-  //     surname: 'Иванов',
-  //     name: 'Владимир',
-  //     midname: 'Сергеевич',
-  //   },
-  //   {
-  //     surname: 'Ковынев',
-  //     name: 'Максим',
-  //     midname: 'Владимирович',
-  //   },
-  // ]
-  private rowData = []
 
-  // ================ End Table ================
+  private gridOptionsPeople = {
+    ...AgGridFactory.getDefaultGridOptions(),
+    defaultColDef: {
+      editable: false,
+      sortable: true,
+      filter: true,
+      resizable: true,
+    },
+    pagination: true,
+    paginationPageSize: 15,
+    onGridReady: this.onGridReadyPeople,
+    components: {
+      AgGridFactory,
+    },
+    frameworkComponents: {
+      ActionRenderer,
+    },
+  }
+  private rowDataPeople = []
+  private rowData = []
 
   private model = {
     greeting: ['hello'],
