@@ -26,10 +26,7 @@
           <b-button @click="updateTableWithDate" variant="primary"
             >Обновить таблицу</b-button
           >
-          <b-button
-            @click="updateTableWithDate"
-            variant="primary"
-            class="ml-auto"
+          <b-button @click="addAccident" variant="primary" class="ml-auto"
             >Добавить происшествие</b-button
           >
         </b-form>
@@ -66,10 +63,34 @@
 
     <EditAddModal
       editUserModalId="addUser"
-      title="Приглашение пользователя"
+      title="Добавление участника"
       type="add"
       @reload="reDrawTable"
     ></EditAddModal>
+
+    <EditAddModal
+      ref="EditAddModal"
+      editUserModalId="editUser"
+      title="Редактирование участника"
+      type="edit"
+      :edit-model="editUserModel"
+      @reload="reDrawTable"
+    ></EditAddModal>
+
+    <AddEditAccidentModal
+      editAccidentModalId="addAccident"
+      title="Добавление происшествия"
+      type="add"
+      @reload="reDrawTable"
+    ></AddEditAccidentModal>
+
+    <AddEditAccidentModal
+      ref="EditAccidentModal"
+      editAccidentModalId="editAccident"
+      title="Добавление происшествия"
+      type="edit"
+      @reload="reDrawTable"
+    ></AddEditAccidentModal>
   </div>
 </template>
 
@@ -90,6 +111,8 @@ import { GridApi } from 'ag-grid-community'
 import ShowNumberModal from '@/components/ShowNumberModal.vue'
 import UserFactory from '@/factories/userFactory'
 import EditAddModal from '@/components/EditAddModal.vue'
+import AddEditAccidentModal from '@/components/AddEditAccidentModal.vue'
+import dateFormat from '@/config/dateFormat'
 
 const Mapper = Vue.extend({
   computed: {
@@ -98,14 +121,26 @@ const Mapper = Vue.extend({
 })
 
 @Component({
-  components: { AgGridVue, ActionRenderer, ShowNumberModal, EditAddModal },
+  components: {
+    AgGridVue,
+    ActionRenderer,
+    ShowNumberModal,
+    EditAddModal,
+    AddEditAccidentModal,
+  },
 })
 export default class DevelopmentPage extends Mapper {
+  $refs!: {
+    EditAddModal: EditAddModal
+    EditAccidentModal: AddEditAccidentModal
+  }
+
   private gridApi?: GridApi
   private startDate = ''
   private endDate = ''
 
   private textOfModal = UserFactory.emptyText()
+  private editUserModel: any
 
   private async updateTableWithDate() {
     if (this.startDate === '' || this.endDate === '') {
@@ -130,6 +165,10 @@ export default class DevelopmentPage extends Mapper {
 
   private openAddEditModal() {
     this.$bvModal.show('addUser')
+  }
+
+  private addAccident() {
+    this.$bvModal.show('addAccident')
   }
 
   private columnDefsPeople = [
@@ -183,7 +222,8 @@ export default class DevelopmentPage extends Mapper {
       ...AgGridFactory.getActionColumn({
         cellRendererParams: {
           onEdit: (e: any) => {
-            console.log(e)
+            this.$refs.EditAddModal.openEditModal(e.data)
+            this.$bvModal.show('editUser')
           },
           onInfo: async (e: any) => {
             const res = await UserAPI.getAccidentOfPerson(e.data?.id)
@@ -239,8 +279,15 @@ export default class DevelopmentPage extends Mapper {
     {
       ...AgGridFactory.getActionColumn({
         cellRendererParams: {
-          onEdit: (e: any) => {
+          onInfo: (e: any) => {
             console.log(e)
+          },
+          onEdit: (e: any) => {
+            this.$refs.EditAccidentModal.openModal(e.data)
+            ;(e.data.registerDate as string) = moment(
+              e.data.registerDate
+            ).format('DD.MM.YYYY')
+            this.$bvModal.show('editAccident')
           },
           onDelete: async (e: any) => {
             await UserAPI.deleteAccident(e.data?.accidentId)
@@ -317,139 +364,6 @@ export default class DevelopmentPage extends Mapper {
   }
   private rowDataPeople = []
   private rowData = []
-
-  private model = {
-    greeting: ['hello'],
-    greetingRadio: 'hello',
-    texteditors: 'notepad++',
-    text: 'Hello world!',
-    year: 2020,
-    rowData: this.rowData,
-    date: '',
-    skills: '',
-    multiselectFIO: '',
-  }
-
-  private schema: FormSchema = {
-    fields: [
-      {
-        type: 'bootstrapRadioGroup',
-        model: 'greetingRadio',
-        label: 'Language Greeting',
-        values: ['hello', 'hola', 'привет'],
-      },
-      {
-        type: 'multiselect',
-        inputType: 'text',
-        model: 'texteditors',
-        label: 'Editor',
-        options: ['vim', 'emacs', 'notepad++'],
-        styleClasses: 'w-50 pr-2',
-        tagPlaceholder: '',
-      },
-      {
-        type: 'bootstrap',
-        inputType: 'text',
-        model: 'text',
-        styleClasses: 'w-50',
-        label: 'Sample label',
-        placeholder: 'Sample placeholder',
-      },
-      {
-        type: 'bootstrap',
-        inputType: 'number',
-        label: 'Year',
-        model: 'year',
-        min: 2000,
-        max: 2100,
-        number: true,
-      },
-      {
-        type: 'agGrid',
-        model: 'rowData',
-        wrapHeader: true,
-        noAddButton: false,
-        buttonToolbar: true,
-        required: true,
-        disabled: false,
-        noCloneButton: true,
-        columnDefs: [
-          {
-            headerName: 'Фамилия',
-            field: 'surname',
-            width: 150,
-          },
-          {
-            headerName: 'Имя',
-            field: 'name',
-            width: 150,
-          },
-          {
-            headerName: 'Отчество',
-            field: 'midname',
-            width: 150,
-          },
-        ],
-        gridOptions: {
-          ...AgGridFactory.getDefaultGridOptions(),
-          stopEditingWhenGridLosesFocus: true,
-          domLayout: 'autoHeight',
-          defaultColDef: {
-            cellClass: 'cell-wrap-text',
-            autoHeight: true,
-            editable: true,
-          },
-        },
-      },
-      {
-        type: 'bootstrapTextArea',
-        label: 'TextArea',
-        model: 'text',
-        required: true,
-        hint: 'Sample hint',
-      },
-      {
-        type: 'datepicker',
-        label: 'Date',
-        model: 'date',
-        styleClasses: 'w-50 pr-2',
-      },
-      {
-        type: 'bootstrapCheckboxGroup',
-        model: 'greeting',
-        label: 'Language Greeting',
-        styleClasses: 'w-50 pr-2',
-        values: ['hello', 'hola', 'привет'],
-        disabled: false,
-      },
-      {
-        type: 'bootstrapSelect',
-        label: 'Skills',
-        model: 'skills',
-        options: ['Javascript', 'VueJS', 'CSS3', 'HTML5'],
-      },
-      {
-        type: 'multiselect',
-        inputType: 'text',
-        model: 'multiselectFIO',
-        label: 'User FIO',
-        options: this.rowData,
-        styleClasses: 'w-100',
-        customLabel({ surname, name, midname }: any) {
-          if (surname) {
-            return `${surname} ${name} ${midname} - человек`
-          }
-          return 'Выберите значение'
-        },
-        onChanged: (model: any, newV: any) => {
-          model.multiselectFIO = newV.surname
-        },
-      },
-    ].map((field) => ({
-      ...field,
-      required: true,
-    })),
-  }
 }
 </script>
 

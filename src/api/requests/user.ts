@@ -25,6 +25,22 @@ export default class UserAPI {
     return http.get(`${baseURL}/accidents/personal/${id}`)
   }
 
+  public static createPerson(person: any) {
+    return http.post(`${baseURL}/people/create`, { person })
+  }
+
+  public static setPerson(person: any, id: number) {
+    return http.put(`${baseURL}/people/set/${id}`, { person })
+  }
+
+  public static setAccident(accident: any, id: number) {
+    return http.put(`${baseURL}/accidents/set/${id}`, { accident })
+  }
+
+  public static createAccident(accident: any) {
+    return http.post(`${baseURL}/accidents/create`, { accident })
+  }
+
   public static getAccidents(
     filter: { [k: string]: any } | null
   ): AxiosPromise {

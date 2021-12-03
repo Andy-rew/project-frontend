@@ -21,6 +21,7 @@
 import { Vue, Prop, Component } from 'vue-property-decorator'
 import { FormSchema } from 'vue-form-generator'
 import UserFactory from '@/factories/userFactory'
+import UserAPI from '@/api/requests/user'
 
 @Component
 export default class EditAddModal extends Vue {
@@ -29,9 +30,13 @@ export default class EditAddModal extends Vue {
   @Prop(String) editUserModalId!: string
   @Prop(String) type?: 'add' | 'edit'
 
-  private textButton = 'Пригласить'
+  private textButton = 'Добавить'
 
   private userModel = UserFactory.emptyPerson()
+
+  public openEditModal(params: any) {
+    this.userModel = params
+  }
 
   private created() {
     if (this.type === 'edit') {
@@ -79,7 +84,12 @@ export default class EditAddModal extends Vue {
   }
 
   private async onSaveCallback() {
-    console.log(this.userModel)
+    if (this.userModel?.id !== 0 && this.type === 'edit') {
+      await UserAPI.setPerson(this.userModel, this.userModel?.id)
+    } else {
+      await UserAPI.createPerson(this.userModel)
+    }
+    this.$emit('reload')
   }
 
   private onHidden() {
