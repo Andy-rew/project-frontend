@@ -91,6 +91,8 @@
       type="edit"
       @reload="reDrawTable"
     ></AddEditAccidentModal>
+    <h4 class="mt-3">Участник - происшествие</h4>
+    <AccidentPersonForm></AccidentPersonForm>
   </div>
 </template>
 
@@ -113,6 +115,7 @@ import UserFactory from '@/factories/userFactory'
 import EditAddModal from '@/components/EditAddModal.vue'
 import AddEditAccidentModal from '@/components/AddEditAccidentModal.vue'
 import dateFormat from '@/config/dateFormat'
+import AccidentPersonForm from '@/components/AccidentPersonForm.vue'
 
 const Mapper = Vue.extend({
   computed: {
@@ -127,6 +130,7 @@ const Mapper = Vue.extend({
     ShowNumberModal,
     EditAddModal,
     AddEditAccidentModal,
+    AccidentPersonForm,
   },
 })
 export default class DevelopmentPage extends Mapper {

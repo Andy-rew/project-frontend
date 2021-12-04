@@ -21,5 +21,5 @@ export default class App extends Vue {}
 @import '../node_modules/ag-grid-community/dist/styles/ag-grid.css';
 @import '../node_modules/ag-grid-community/dist/styles/ag-theme-alpine.css';
 @import '../node_modules/vue-form-generator/dist/vfg.css';
-@import './scss/vfg.scss';
+//@import './scss/vfg.scss';
 </style>

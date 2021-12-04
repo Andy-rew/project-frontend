@@ -37,6 +37,10 @@ export default class UserAPI {
     return http.put(`${baseURL}/accidents/set/${id}`, { accident })
   }
 
+  public static setPersonAccidents(data: any) {
+    return http.post(`${baseURL}/accidents/set/personal`, { data })
+  }
+
   public static createAccident(accident: any) {
     return http.post(`${baseURL}/accidents/create`, { accident })
   }

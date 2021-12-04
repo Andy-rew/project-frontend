@@ -1,7 +1,25 @@
+import { roles } from '@/config/roles/roles'
+
 export default class UserFactory {
   public static emptyText() {
     return {
       text: '',
+    }
+  }
+
+  public static emptySelects() {
+    return {
+      accidents: [],
+      people: [],
+      roles: [],
+    }
+  }
+
+  public static sendSelects() {
+    return {
+      accidents: [] as any[],
+      person: 0,
+      role: roles,
     }
   }
 

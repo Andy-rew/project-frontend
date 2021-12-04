@@ -1,14 +1,12 @@
 export enum roles {
-  'admin' = 'admin', // Администратор
-  'contentmanager' = 'contentmanager', // Контент-менеджер
+  culprit = 'culprit', //виновник
+  victim = 'victim', // потерпевший
+  suspect = 'suspect', // подозреваемый
+  witness = 'witness', // свидетель
 }
-
 export const rolesTranslation: { [k: string]: string } = {
-  [roles.admin]: 'Администратор',
-  [roles.contentmanager]: 'Контент-менеджер',
-}
-
-export const rolesBadges: { [k: string]: string } = {
-  [roles.admin]: 'Адм',
-  [roles.contentmanager]: 'К-М',
+  [roles.culprit]: 'виновник',
+  [roles.victim]: 'жертва',
+  [roles.suspect]: 'подозреваемый',
+  [roles.witness]: 'свидетель',
 }
