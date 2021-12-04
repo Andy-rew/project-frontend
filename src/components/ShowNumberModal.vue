@@ -1,6 +1,5 @@
 <template>
   <b-modal size="md" :id="modalId" title="Количество происшествий">
-    <strong>Количество происшествий: </strong>
     <div>
       {{ text }}
     </div>
@@ -17,10 +16,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 export default class ShowNumberModal extends Vue {
   @Prop(String) modalId!: string
   @Prop(String) text!: string
-
-  //
-  // private created() {
-  // }
 }
 </script>
 

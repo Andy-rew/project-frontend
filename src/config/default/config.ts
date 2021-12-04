@@ -1,16 +1,12 @@
 export default {
   systemTitle: {
-    fullName: 'ЛЭТИ-классы',
-    shortName: 'ЛЭТИ',
+    fullName: '',
+    shortName: '',
   },
   routing: {
     homePage: {
       path: '/development',
       name: 'О проекте',
-    },
-    authPage: {
-      path: '/auth',
-      name: 'Авторизация в системе',
     },
   },
   mobileWidth: 768,

@@ -70,4 +70,8 @@ export default class UserAPI {
   public static getPeople(): AxiosPromise {
     return http.get(`${baseURL}/people`)
   }
+
+  public static getProtocol(id: number) {
+    return http.get(`${baseURL}/accidents/protocol/${id}`)
+  }
 }

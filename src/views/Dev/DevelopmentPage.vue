@@ -93,6 +93,7 @@
     ></AddEditAccidentModal>
     <h4 class="mt-3">Участник - происшествие</h4>
     <AccidentPersonForm></AccidentPersonForm>
+    <ProtokolModal ref="Protokol"></ProtokolModal>
   </div>
 </template>
 
@@ -105,7 +106,6 @@ import ActionRenderer from '@/components/table/ActionRenderer.vue'
 // Mixin
 import { mobileWidthMapper } from '@/store/modules/mobileWidth'
 import AgGridFactory from '@/factories/agGridFactory'
-import { FormSchema } from 'vue-form-generator'
 import UserAPI from '@/api/requests/user'
 import _ from 'lodash'
 import moment from 'moment'
@@ -114,8 +114,9 @@ import ShowNumberModal from '@/components/ShowNumberModal.vue'
 import UserFactory from '@/factories/userFactory'
 import EditAddModal from '@/components/EditAddModal.vue'
 import AddEditAccidentModal from '@/components/AddEditAccidentModal.vue'
-import dateFormat from '@/config/dateFormat'
 import AccidentPersonForm from '@/components/AccidentPersonForm.vue'
+import ProtokolModal from '@/components/ProtokolModal.vue'
+import { rolesTranslation } from '@/config/roles/roles'
 
 const Mapper = Vue.extend({
   computed: {
@@ -131,18 +132,19 @@ const Mapper = Vue.extend({
     EditAddModal,
     AddEditAccidentModal,
     AccidentPersonForm,
+    ProtokolModal,
   },
 })
 export default class DevelopmentPage extends Mapper {
   $refs!: {
     EditAddModal: EditAddModal
     EditAccidentModal: AddEditAccidentModal
+    Protokol: ProtokolModal
   }
 
   private gridApi?: GridApi
   private startDate = ''
   private endDate = ''
-
   private textOfModal = UserFactory.emptyText()
   private editUserModel: any
 
@@ -156,6 +158,7 @@ export default class DevelopmentPage extends Mapper {
       ).data?.accidents
       this.gridApi?.setRowData(this.rowData)
     }
+    this.reDrawTable()
   }
 
   private async created() {
@@ -231,7 +234,13 @@ export default class DevelopmentPage extends Mapper {
           },
           onInfo: async (e: any) => {
             const res = await UserAPI.getAccidentOfPerson(e.data?.id)
-            this.textOfModal.text = _.toString(res.data.count)
+            this.textOfModal.text =
+              ` ${e.data.name}` +
+              ` ${e.data.surname}` +
+              ` ${e.data.midname}` +
+              ' упомянут(-а) в ' +
+              _.toString(res.data.count) +
+              ' происшествии(-ях)'
             this.$bvModal.show('countModal')
           },
           onDelete: async (e: any) => {
@@ -283,8 +292,16 @@ export default class DevelopmentPage extends Mapper {
     {
       ...AgGridFactory.getActionColumn({
         cellRendererParams: {
-          onInfo: (e: any) => {
-            console.log(e)
+          onInfo: async (e: any) => {
+            const res = await UserAPI.getProtocol(e.data?.accidentId)
+            ;(res.data.registerDate as string) = moment(
+              res.data.registerDate
+            ).format('DD.MM.YYYY')
+            res.data.people.map(
+              (data: any) => (data.role = rolesTranslation[data.role])
+            )
+            this.$refs.Protokol.openModal(res.data)
+            this.$bvModal.show('protocolModalId')
           },
           onEdit: (e: any) => {
             this.$refs.EditAccidentModal.openModal(e.data)

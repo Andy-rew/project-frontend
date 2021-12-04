@@ -7,6 +7,15 @@ export default class UserFactory {
     }
   }
 
+  public static emptyProtocol() {
+    return {
+      info: '',
+      solution: '',
+      registerDate: '' as '' | Date,
+      people: [] as any[],
+    }
+  }
+
   public static emptySelects() {
     return {
       accidents: [],
