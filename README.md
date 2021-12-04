@@ -1,3 +1,7 @@
-# classes-etu-frontend
+# project-etu-frontend
 
-Fronted проекта "ЛЭТИ-классы"
+Fronted курсовой работы по управлению данными
+### Запуск клиента
+
+    yarn -i
+    yarn serve

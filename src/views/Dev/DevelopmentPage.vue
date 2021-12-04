@@ -158,7 +158,7 @@ export default class DevelopmentPage extends Mapper {
       ).data?.accidents
       this.gridApi?.setRowData(this.rowData)
     }
-    this.reDrawTable()
+    this.reDrawPeopleTable()
   }
 
   private async created() {
@@ -329,6 +329,16 @@ export default class DevelopmentPage extends Mapper {
         this.rowData = response.data.accidents
         this.gridApi.setRowData(this.rowData)
       }
+      if (response1) {
+        this.rowDataPeople = response1.data.people
+        this.gridApi.setRowData(this.rowDataPeople)
+      }
+    }
+  }
+
+  private async reDrawPeopleTable() {
+    if (this.gridApi) {
+      const response1 = await UserAPI.getPeople()
       if (response1) {
         this.rowDataPeople = response1.data.people
         this.gridApi.setRowData(this.rowDataPeople)
